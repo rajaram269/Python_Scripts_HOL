@@ -1,64 +1,11 @@
-import pandas as pd
 import os
-
-def clean_dataframe(df):
-   # Step 1: Identify the header row (row with the maximum non-empty values)
-    header_row_index = df.notna().sum(axis=1).idxmax()
-
-    # Step 2: Set the headers
-    df.columns = df.iloc[header_row_index]  # Use this row as the header
-    df = df.iloc[header_row_index :].reset_index(drop=True)  # Keep rows after the header row
-
-    # Step 3: Drop columns where all values are empty (if necessary)
-    df = df.dropna(axis=1, how='all')
-
-    # Step 4: Drop rows where all values are empty
-    df = df.dropna(how='all').reset_index(drop=True)
-
-    
-    # Remove rows where a certain percentage of columns are NaN
-    #threshold = 0.7  # 70% of columns must have a non-NaN value
-    #df = df.dropna(thresh=int(len(df.columns) * (1 - threshold)))
-    
-    return df
-
-
-def load_sku_mapping(sku_map_path):
-    try:
-        excel_file = pd.ExcelFile(sku_map_path)
-        sheet_names = excel_file.sheet_names
-        all_sheets_data = []
-        
-        for sheet_name in sheet_names:
-            print(f"Processing SKU mapping sheet: {sheet_name}")
-            df = pd.read_excel(sku_map_path, sheet_name=sheet_name)
-            df = df.iloc[:, :3]
-            df.columns = ['Channel_SKU', 'Master_SKU', 'SKU_Name']
-            df['Channel'] = sheet_name
-            all_sheets_data.append(df)
-        
-        combined_sku_mapping = pd.concat(all_sheets_data, ignore_index=True)
-        print(f"Combined SKU mapping loaded successfully. Total rows: {len(combined_sku_mapping)}")
-        combined_sku_mapping.to_csv('combined_sku_map.csv', 
-           index=False,           # Don't write row index
-           sep=',',               # Use comma as separator (default)
-           encoding='utf-8',      # Specify encoding
-           header=True            # Write column names
- )
-
-        return combined_sku_mapping
-    except Exception as e:
-        print(f"Error loading SKU mapping file: {e}")
-        return None
-
-
-def process_inventory_files(folder_path, sku_map_path):
-    sku_mapping = load_sku_mapping(sku_map_path)
-    if sku_mapping is None:
-        print("SKU mapping failed. Exiting.")
-        return None
-
-    file_mappings = {
+import sys
+import argparse
+import pandas as pd
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from tkinter.scrolledtext import ScrolledText
+default_file_mappings = {
         'Apollo': {
             'sheet_name': 'SOH',  # Specific sheet for Apollo
             'columns': {
@@ -261,7 +208,78 @@ def process_inventory_files(folder_path, sku_map_path):
             }
         },
     }
+
+file_mappings = default_file_mappings.copy()
+
+
+def clean_dataframe(df):
+   # Step 1: Identify the header row (row with the maximum non-empty values)
+    header_row_index = df.notna().sum(axis=1).idxmax()
+
+    # Step 2: Set the headers
+    df.columns = df.iloc[header_row_index]  # Use this row as the header
+    df = df.iloc[header_row_index :].reset_index(drop=True)  # Keep rows after the header row
+
+    # Step 3: Drop columns where all values are empty (if necessary)
+    df = df.dropna(axis=1, how='all')
+
+    # Step 4: Drop rows where all values are empty
+    df = df.dropna(how='all').reset_index(drop=True)
+
     
+    # Remove rows where a certain percentage of columns are NaN
+    #threshold = 0.7  # 70% of columns must have a non-NaN value
+    #df = df.dropna(thresh=int(len(df.columns) * (1 - threshold)))
+    
+    return df
+
+
+def load_sku_mapping(sku_map_path):
+    try:
+        excel_file = pd.ExcelFile(sku_map_path)
+        sheet_names = excel_file.sheet_names
+        all_sheets_data = []
+        
+        for sheet_name in sheet_names:
+            print(f"Processing SKU mapping sheet: {sheet_name}")
+            df = pd.read_excel(sku_map_path, sheet_name=sheet_name)
+            df = df.iloc[:, :3]
+            df.columns = ['Channel_SKU', 'Master_SKU', 'SKU_Name']
+            df['Channel'] = sheet_name
+            all_sheets_data.append(df)
+        
+        combined_sku_mapping = pd.concat(all_sheets_data, ignore_index=True)
+        print(f"Combined SKU mapping loaded successfully. Total rows: {len(combined_sku_mapping)}")
+        combined_sku_mapping.to_csv('combined_sku_map.csv', 
+           index=False,           # Don't write row index
+           sep=',',               # Use comma as separator (default)
+           encoding='utf-8',      # Specify encoding
+           header=True            # Write column names
+ )
+
+        return combined_sku_mapping
+    except Exception as e:
+        print(f"Error loading SKU mapping file: {e}")
+        return None
+
+class PrintToGUI:
+    def __init__(self, text_widget):
+        self.text_widget = text_widget
+
+    def write(self, message):
+        self.text_widget.insert(tk.END, message)
+        self.text_widget.see(tk.END)  # Auto-scroll to the bottom
+
+    def flush(self):
+        pass  # For compatibility with Python's print/logging behavior
+
+# Function to simulate data extraction
+def extract_data(folder_path, output_path):
+    # Simulate processing each file
+    sku_mapping = load_sku_mapping('E:/SKU_Mapping.xlsx')
+    if sku_mapping is None:
+        print("SKU mapping failed. Exiting.")
+        return None
 
     all_inventory_data = []
     excel_files = [f for f in os.listdir(folder_path) if f.endswith(('.xlsx', '.xls'))]
@@ -333,7 +351,7 @@ def process_inventory_files(folder_path, sku_map_path):
 
     if all_inventory_data:
         final_inventory_data = pd.concat(all_inventory_data, ignore_index=True)
-        output_path = 'Consolidated_Inventory_Debug1.csv'
+        output_path = 'E:/Consolidated_Inventory_Debug1.csv'
         final_inventory_data.to_csv(output_path, index=False)
         print(f"\nTotal files processed: {len(all_inventory_data)}")
         print(f"Total records: {len(final_inventory_data)}")
@@ -343,9 +361,120 @@ def process_inventory_files(folder_path, sku_map_path):
         print("No files were successfully processed.")
         return None
 
-# Specify the folder containing Excel files
-folder_path = 'E:/Extract/'
-sku_map_path = 'E:/SKU_Mapping.xlsx'
+# GUI Functionality
+def run_gui():
+    def select_input_dir():
+        input_path.set(filedialog.askdirectory())
 
-# Run the processing
-result = process_inventory_files(folder_path, sku_map_path)
+    def select_output_dir():
+        output_path.set(filedialog.askdirectory())
+
+    def process_files():
+        inp = input_path.get()
+        out = output_path.get()
+
+        if not inp or not out:
+            messagebox.showerror("Error", "Please select both input and output directories.")
+            return
+
+        if not os.path.exists(inp) or not os.path.exists(out):
+            messagebox.showerror("Error", "One or both directories do not exist.")
+            return
+
+        text_output.delete(1.0, tk.END)  # Clear the text box
+        for step in extract_data(inp, out):
+            text_output.insert(tk.END, step + "\n")
+            text_output.see(tk.END)  # Auto-scroll
+            root.update_idletasks()
+
+    def edit_mappings():
+        # Open a new window to edit mappings
+        editor = tk.Toplevel(root)
+        editor.title("Edit File Mappings")
+
+        text_editor = ScrolledText(editor, width=200, height=40)
+        text_editor.pack(padx=10, pady=10)
+
+        # Load the current file mappings into the text editor
+        mapping_text = ""
+        for channel, config in file_mappings.items():
+            mapping_text += f"Channel: {channel}\nSheet Name: {config['sheet_name']}\nColumns:\n"
+            for output_col, source_col in config['columns'].items():
+                mapping_text += f"  {output_col}: {source_col}\n"
+            mapping_text += "\n"
+
+        text_editor.insert(1.0, mapping_text)
+
+        def save_mappings():
+            # Parse the edited text back into the file_mappings structure
+            try:
+                new_mappings = {}
+                lines = text_editor.get(1.0, tk.END).strip().split("\n")
+                channel = None
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("Channel:"):
+                        channel = line.split(":", 1)[1].strip()
+                        new_mappings[channel] = {'columns': {}}
+                    elif line.startswith("Sheet Name:"):
+                        new_mappings[channel]['sheet_name'] = line.split(":", 1)[1].strip()
+                    elif ":" in line and channel:
+                        key, value = map(str.strip, line.split(":", 1))
+                        new_mappings[channel]['columns'][key] = value
+
+                global file_mappings
+                file_mappings = new_mappings
+                messagebox.showinfo("Success", "Mappings updated successfully!")
+                editor.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update mappings: {e}")
+
+        tk.Button(editor, text="Save Mappings", command=save_mappings).pack(pady=10)
+
+    # GUI Layout
+    root = tk.Tk()
+    root.title("Batch Data Extractor")
+
+    tk.Label(root, text="Input Files Directory:").pack(anchor="w", padx=10, pady=5)
+    input_path = tk.StringVar()
+    tk.Entry(root, textvariable=input_path, width=50).pack(padx=10, pady=5)
+    tk.Button(root, text="Browse", command=select_input_dir).pack(pady=5)
+
+    tk.Label(root, text="Output Files Directory:").pack(anchor="w", padx=10, pady=5)
+    output_path = tk.StringVar()
+    tk.Entry(root, textvariable=output_path, width=50).pack(padx=10, pady=5)
+    tk.Button(root, text="Browse", command=select_output_dir).pack(pady=5)
+
+    tk.Button(root, text="Edit Mappings", command=edit_mappings).pack(pady=5)
+    tk.Button(root, text="Process Files", command=process_files).pack(pady=10)
+
+    text_output = ScrolledText(root, width=150, height=40)
+    text_output.pack(padx=10, pady=10)
+    sys.stdout = PrintToGUI(text_output)
+
+    root.mainloop()
+
+# CLI Functionality
+def run_cli():
+    parser = argparse.ArgumentParser(description="Batch Data Extractor")
+    parser.add_argument("input_dir", help="Path to the input files directory")
+    parser.add_argument("output_dir", help="Path to the output files directory")
+    args = parser.parse_args()
+
+    inp = args.input_dir
+    out = args.output_dir
+
+    if not os.path.exists(inp) or not os.path.exists(out):
+        print("Error: One or both directories do not exist.")
+        return
+
+    for step in extract_data(inp, out):
+        print(step)
+
+# Entry point for the app
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        run_cli()
+    else:
+        run_gui()
