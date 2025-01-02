@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+from openpyxl import load_workbook
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -211,28 +212,91 @@ default_file_mappings = {
 
 file_mappings = default_file_mappings.copy()
 
-
-def clean_dataframe(df):
-   # Step 1: Identify the header row (row with the maximum non-empty values)
-    header_row_index = df.notna().sum(axis=1).idxmax()
-
-    # Step 2: Set the headers
-    df.columns = df.iloc[header_row_index]  # Use this row as the header
-    df = df.iloc[header_row_index :].reset_index(drop=True)  # Keep rows after the header row
-
-    # Step 3: Drop columns where all values are empty (if necessary)
-    df = df.dropna(axis=1, how='all')
-
-    # Step 4: Drop rows where all values are empty
-    df = df.dropna(how='all').reset_index(drop=True)
-
+def clean_dataframe(df, header_threshold=0.8):
+    """
+    Clean erratic or unhygienic data in a DataFrame.
     
-    # Remove rows where a certain percentage of columns are NaN
-    #threshold = 0.7  # 70% of columns must have a non-NaN value
-    #df = df.dropna(thresh=int(len(df.columns) * (1 - threshold)))
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The input DataFrame to be cleaned
+    header_threshold : float, default=0.8
+        Minimum proportion of non-NA values required for a row to be considered as header
+        
+    Returns:
+    --------
+    pandas.DataFrame
+        Cleaned DataFrame with proper headers and no empty rows/columns
+        
+    Raises:
+    -------
+    ValueError
+        If DataFrame is empty or no valid header row can be detected
+    """
+    if df.empty:
+        raise ValueError("The DataFrame is empty.")
+        
+    # Create a copy to avoid modifying the original
+    df = df.copy()
+    
+    # Calculate the threshold for non-NA values
+    min_non_na_count = len(df.columns) * header_threshold
+    
+    # Find rows that meet the threshold
+    non_na_counts = df.notna().sum(axis=1)
+    valid_header_rows = non_na_counts[non_na_counts >= min_non_na_count]
+    
+    if valid_header_rows.empty:
+        raise ValueError(f"No row found with at least {header_threshold*100}% non-NA values to use as header.")
+    
+    # Use the first row that meets the threshold
+    header_row_index = valid_header_rows.index[0]-1
+    
+    # Validate the detected header row
+    potential_header = df.iloc[header_row_index]
+    if potential_header.isnull().all():
+        raise ValueError("Selected header row is entirely empty.")
+    
+    # Clean and set the column names
+    """ new_columns = (potential_header
+                  .fillna("Column_" + pd.Series(range(len(potential_header))).astype(str))
+                  .astype(str)
+                  .str.strip()
+                  .str.lower()
+                  .str.replace(r'[^\w\s-]', '')  # Remove special characters
+                  .str.replace(r'\s+', '_'))     # Replace spaces with underscores
+     """
+    
+    # Handle duplicate column names
+    """ seen = {}
+    cleaned_columns = []
+    for col in new_columns:
+        if col in seen:
+            seen[col] += 1
+            cleaned_columns.append(f"{col}_{seen[col]}")
+        else:
+            seen[col] = 0
+            cleaned_columns.append(col)
+    
+    df.columns = cleaned_columns """
+    
+    # Remove rows above the header and reset index
+    df = df.iloc[header_row_index + 1:].reset_index(drop=True)
+    
+    # Drop entirely empty rows and columns
+    df = df.dropna(how='all')
+    df = df.dropna(how='all', axis=1)
+    
+    # Remove duplicate rows
+    df = df.drop_duplicates()
+    
+    # Convert empty strings to NaN for consistency
+    #df = df.replace(r'^\s*$', np.nan, regex=True)
+    
+    # Fill forward for continuity (optional - comment out if not needed)
+    #df = df.fillna(method='ffill')
     
     return df
-
 
 def load_sku_mapping(sku_map_path):
     try:
@@ -249,15 +313,16 @@ def load_sku_mapping(sku_map_path):
             all_sheets_data.append(df)
         
         combined_sku_mapping = pd.concat(all_sheets_data, ignore_index=True)
+        sku_mapping = combined_sku_mapping.drop_duplicates(subset=['Channel_SKU'], keep='first')
         print(f"Combined SKU mapping loaded successfully. Total rows: {len(combined_sku_mapping)}")
-        combined_sku_mapping.to_csv('combined_sku_map.csv', 
+        sku_mapping.to_csv('E:/sku_map.csv', 
            index=False,           # Don't write row index
            sep=',',               # Use comma as separator (default)
            encoding='utf-8',      # Specify encoding
            header=True            # Write column names
  )
 
-        return combined_sku_mapping
+        return sku_mapping
     except Exception as e:
         print(f"Error loading SKU mapping file: {e}")
         return None
@@ -282,9 +347,11 @@ def extract_data(folder_path, output_path):
         return None
 
     all_inventory_data = []
-    excel_files = [f for f in os.listdir(folder_path) if f.endswith(('.xlsx', '.xls'))]
+    excel_files = [f for f in os.listdir(folder_path) if f.endswith(('.xlsx', '.xls','.csv'))]
+    #file_extension =
 
     for file_name in excel_files:
+        file_extension = os.path.splitext(file_name)[1].lower()
         try:
             file_path = os.path.join(folder_path, file_name)
             mapping = None
@@ -301,7 +368,18 @@ def extract_data(folder_path, output_path):
             print(f"Processing file: {file_name} with mapping: {mapping}")
 
             try:
-                soh_data = (pd.read_excel(file_path, sheet_name=mapping['sheet_name']))
+                if file_extension == ".xlsx":
+                    soh_data = (pd.read_excel(file_path, sheet_name=mapping['sheet_name']))
+                    soh_data = clean_dataframe(soh_data)
+                    #process_dataframe(df, sheet, results, classifier)
+                elif file_extension == ".csv":
+                    soh_data = pd.read_csv(file_path)
+                    #soh_data = clean_dataframe(soh_data)
+                    #process_dataframe(df, "Sheet1", results, classifier)
+                else:
+                    raise ValueError("Unsupported file format. Only .xlsx and .csv are supported.")
+
+                #soh_data = (pd.read_excel(file_path, sheet_name=mapping['sheet_name']))
             except Exception as e:
                 print(f"Error loading sheet {mapping['sheet_name']} from {file_name}: {e}")
                 continue
@@ -392,7 +470,7 @@ def run_gui():
         editor = tk.Toplevel(root)
         editor.title("Edit File Mappings")
 
-        text_editor = ScrolledText(editor, width=200, height=40)
+        text_editor = ScrolledText(editor, width=100, height=15)
         text_editor.pack(padx=10, pady=10)
 
         # Load the current file mappings into the text editor
