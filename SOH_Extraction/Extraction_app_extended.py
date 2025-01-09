@@ -8,209 +8,208 @@ from tkinter import filedialog, messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 default_file_mappings = {
     "SOH_All_Combined": {
-          'Apollo': {
-            'sheet_name': 'SOH',  # Specific sheet for Apollo
-            'columns': {
-                'Channel_SKU': 'Item',         # Source column : Desired output column
-                'SKU_Name': 'itemname',
-                'Quantity': 'QOH',
-                'Inventory Location': 'Site_Name'
-            }
-        },
-          'Nykaa Sales': {
-            'sheet_name': 'SOH',  # Specific sheet for Nykaa
-            'columns': {
-                'Channel_SKU': 'SKU',
-                'SKU_Name': 'SKU Desc',
-                'Quantity': 'Available Qty',
-                'Inventory Location': 'Site Location '
-            }
-        },
-          'Tira': {
-            'sheet_name': 'SOH',  # Another example with different mapping
-            'columns': {
-                'Channel_SKU': 'Article',
-                'SKU_Name': 'Article Description',
-                'Quantity': 'Qty',
-                'Inventory Location': 'Site'
-            }
-        },
-          'Amazon': {
-            'sheet_name': 'Sheet1',  # Another example with different mapping
-            'columns': {
-                'Channel_SKU': 'sku',
-                'SKU_Name': 'product-name',
-                'Quantity': ['afn-total-quantity','afn-inbound-shipped-quantity'],
-                #'Available Qty2': 'afn-inbound-shipped-quantity',
-                'Inventory Location': 'store'
-            },
-            'sum_inventory_columns': ['Quantity']
-        },
-          'BB whole': {
-            'sheet_name': 'BB TFS',  # Another example with different mapping
-            'columns': {
-                'Channel_SKU': 'sku_id',
-                'SKU_Name': 'sku_name',
-                'Quantity': 'soh',
-                'Inventory Location': 'city'
-            }
-        },
-          'Boddess': {
-            'sheet_name': 'SOH', 
-            'columns': {
-                'Channel_SKU': '',#Id is missing in the sheet
-                'SKU_Name': 'Product name',
-                'Quantity': 'Qty',
-                'Inventory Location': ''#Store is missing in the sheet
-            }
-        },
-          'D Mart': {
-            'sheet_name': 'Sheet1', 
-            'columns': {
-                'Channel_SKU': 'Material',
-                'SKU_Name': 'Description',
-                'Quantity': 'Stock',
-                'Inventory Location': 'Fc Name'
-            }
-        },
-          'Dabur': {
-            'sheet_name': 'SOH', 
-            'columns': {
-                'Channel_SKU': 'Material',
-                'SKU_Name': 'Material Description',
-                'Quantity': 'Total inventory',
-                'Inventory Location': 'City'
-            }
-        },
-          'Enrich': {
-            'sheet_name': 'SOH_02_Dec_2024', 
-            'columns': {
-                'Channel_SKU': 'esin',
-                'SKU_Name': 'Product Name',
-                'Quantity': 'Store Available',
-                'Inventory Location': 'Store Name'
-            }
-        },
-          'Flipkart': {
-            'sheet_name': 'Sheet0', 
-            'columns': {
-                'Channel_SKU': 'FSN',
-                'SKU_Name': 'Product Title',
-                'Quantity': 'Inventory Available in Units',
-                'Inventory Location': 'Warehouse'
-            }
-        },
-          'Myntra Inventory': {
-            'sheet_name': 'mZw6zUMt_2024-12-17_SJIT_Invent',  #need to address
-            'columns': {
-                'Channel_SKU': 'style id',
-                'SKU_Name': 'sku code',# title is missing
-                'Quantity': 'sellable inventory count',
-                'Inventory Location': 'warehouse name'
-            }
-        },
-          'Myntra OR Inventory': {
-            'sheet_name': 'Sheet1',  #need to address
-            'columns': {
-                'Channel_SKU': 'style_id',
-                'SKU_Name': 'style_name',# title is missing
-                'Quantity': 'inv_units_q1',
-                'Inventory Location': 'warehouse_name'
-            }
-        },
-          'NoblePlus': {
-            'sheet_name': 'STOCK VALUATION DETAILED',  #address Blank Rows
-            'columns': {
-                'Channel_SKU': 'Item Code',
-                'SKU_Name': 'Item Name',
-                'Quantity': 'Pack Q',
-                'Inventory Location': 'Branch' 
-            }
-            },
-          'Nykaa Whole': {
-            'sheet_name': 'SOH', 
-            'columns': {
-                'Channel_SKU': 'SKU',
-                'SKU_Name': 'SKU Desc',
-                'Quantity': 'Available Qty',
-                'Inventory Location': 'Site Location '
-            }
-        },
-          'Reliance': {
-            'sheet_name': 'Sheet1', 
-            'columns': {
-                'Channel_SKU': 'sku_code',
-                'SKU_Name': 'brand',#it is missing
-                'Quantity': 'unicommerce_quantity',
-                'Inventory Location': 'facility_code' #code is given
-            }
-        },
-          'SSL': {
-            'sheet_name': 'StockDetails.rdl',   #not available verify
-            'columns': {
-                'Channel_SKU': 'Style Code',
-                'SKU_Name': 'Style Desc',
-                'Quantity': 'Qty Available',
-                'Inventory Location': 'Location'
-            }
-        },
-          'Swiggy': {
-            'sheet_name': 'warehouse_stock_data', 
-            'columns': {
-                'Channel_SKU': 'item_code',
-                'SKU_Name': 'product_name',
-                'Quantity': 'wh_soh',
-                'Inventory Location': 'wh_name'
-            }
-        },
-          'Blinkit': {
-            'sheet_name': 'Blinkit Inventory', 
-            'columns': {
-                'Channel_SKU': 'item_id',
-                'SKU_Name': 'item_name',
-                'Quantity': ['backend_inv_qty','frontend_inv_qty'],
-                'Inventory Location': 'backend_facility_name'
-            },
-            'sum_inventory_columns': ['Quantity']
-        },
-          'Tata': {
-            'sheet_name': 'SOH',  #address first row empty
-            'columns': {
-                'Channel_SKU': 'onemg_sku_id',
-                'SKU_Name': 'sku_name',
-                'Quantity': 'free_qty',
-                'Inventory Location': 'store_full_name'
-            }
-        },
-          'TataCliq': {
-            'sheet_name': 'SOH', 
-            'columns': {
-                'Channel_SKU': 'ALU',
-                'SKU_Name': 'ARTICLE NO',
-                'Quantity': 'ON_HAND',
-                'Inventory Location': 'Store Name'
-            }
-        },
-          'Pantaloons': {
-            'sheet_name': 'Sheet1',   #address first row
-            'columns': {
-                'Channel_SKU': 'Article EAN',
-                'SKU_Name': 'Article Description',
-                'Quantity': 'Stock Qty', #not available
-                'Inventory Location': 'Site Description'
-            }
-        },
-          'Zepto ': {
-            'sheet_name': 'f81c1f0766ad5e56_NON_FBZ_INVENT', 
-            'columns': {
-                'Channel_SKU': 'SKU ID',
-                'SKU_Name': 'SKU Name',
-                'Quantity': 'Total Quantity',
-                'Inventory Location': 'Store Name'
-            }
-        },
+    "Amazon": {
+      "sheet_name": "Sheet1",  
+      "columns": {
+        "Channel_SKU": "asin",
+        "SKU_Name": "product-name",
+        "Quantity": ["afn-fulfillable-quantity", "afn-reserved-quantity", "afn-inbound-shipped-quantity"],
+        "Inventory Location": "store"
+      },
+      "sum_inventory_columns": ["Quantity"]
     },
-    "Ecomm_Sales":{
+    "Apollo": {
+      "sheet_name": "SOH",  
+      "columns": {
+        "Channel_SKU": "Item",
+        "SKU_Name": "itemname",
+        "Quantity": "QOH",
+        "Inventory Location": "Site_Name"
+      }
+    },
+    "BB whole": {
+      "sheet_name": "BB TFS",  
+      "columns": {
+        "Channel_SKU": "sku_id",
+        "SKU_Name": "sku_name",
+        "Quantity": "soh",
+        "Inventory Location": "city"
+      }
+    },
+    "Blinkit": {
+      "sheet_name": "Blinkit Inventory", 
+      "columns": {
+        "Channel_SKU": "item_id",
+        "SKU_Name": "item_name",
+        "Quantity": ["backend_inv_qty", "frontend_inv_qty"],
+        "Inventory Location": "backend_facility_name"
+      },
+      "sum_inventory_columns": ["Quantity"]
+    },
+    "Boddess": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "", 
+        "SKU_Name": "Product name",
+        "Quantity": "Qty",
+        "Inventory Location": "" 
+      }
+    },
+    "D Mart": {
+      "sheet_name": "Sheet1", 
+      "columns": {
+        "Channel_SKU": "Material",
+        "SKU_Name": "Description",
+        "Quantity": "Stock",
+        "Inventory Location": "Fc Name"
+      }
+    },
+    "Dabur": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "Material",
+        "SKU_Name": "Material Description",
+        "Quantity": "Total Inventory",
+        "Inventory Location": "City"
+      }
+    },
+    "Enrich": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "esin",
+        "SKU_Name": "Product Name",
+        "Quantity": "Store Available",
+        "Inventory Location": "Store Name"
+      }
+    },
+    "Flipkart": {
+      "sheet_name": "Sheet0", 
+      "columns": {
+        "Channel_SKU": "FSN",
+        "SKU_Name": "Product Title",
+        "Quantity": "Inventory Available in Units",
+        "Inventory Location": "Warehouse"
+      }
+    },
+    "Myntra Inventory": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "style id",
+        "SKU_Name": "sku code", 
+        "Quantity": "sellable inventory count",
+        "Inventory Location": "warehouse name"
+      }
+    },
+    "Myntra OR Inventory": {
+      "sheet_name": "Sheet1", 
+      "columns": {
+        "Channel_SKU": "style_id",
+        "SKU_Name": "style_name", 
+        "Quantity": "inv_units_q1",
+        "Inventory Location": "warehouse_name"
+      }
+    },
+    "NoblePlus": {
+      "sheet_name": "STOCK VALUATION DETAILED", 
+      "columns": {
+        "Channel_SKU": "Item Code",
+        "SKU_Name": "Item Name",
+        "Quantity": "Pack Q",
+        "Inventory Location": "Branch" 
+      }
+    },
+    "Nykaa Sales": {
+      "sheet_name": "SOH",  
+      "columns": {
+        "Channel_SKU": "SKU",
+        "SKU_Name": "SKU Desc",
+        "Quantity": "Available Qty",
+        "Inventory Location": "Site Location "
+      }
+    },
+    "Nykaa Whole": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "SKU",
+        "SKU_Name": "SKU Desc",
+        "Quantity": "Available Quantity",
+        "Inventory Location": "Site Location "
+      }
+    },
+    "Pantaloons": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "EAN_Code",
+        "SKU_Name": "Article Description",
+        "Quantity": "Closing Stock", 
+        "Inventory Location": "Site_Name"
+      }
+    },
+    "Reliance": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "sku_code",
+        "SKU_Name": "brand", 
+        "Quantity": "unicommerce_quantity",
+        "Inventory Location": "facility_code" 
+      }
+    },
+    "SSL": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "Style Code",
+        "SKU_Name": "Style Desc",
+        "Quantity": "Qty Available",
+        "Inventory Location": "Location"
+      }
+    },
+    "Swiggy": {
+      "sheet_name": "warehouse_stock_data", 
+      "columns": {
+        "Channel_SKU": "item_code",
+        "SKU_Name": "product_name",
+        "Quantity": "wh_soh",
+        "Inventory Location": "wh_name"
+      }
+    },
+    "Tata1mg": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "onemg_sku_id",
+        "SKU_Name": "sku_name",
+        "Quantity": "free_qty",
+        "Inventory Location": "store_full_name"
+      }
+    },
+    "TataCliq": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "ALU",
+        "SKU_Name": "EAN CODE",
+        "Quantity": "ON_HAND",
+        "Inventory Location": "Store Name"
+      }
+    },
+    "Tira": {
+      "sheet_name": "SOH", 
+      "columns": {
+        "Channel_SKU": "Article",
+        "SKU_Name": "Article Description",
+        "Quantity": "Qty",
+        "Inventory Location": "Site"
+      }
+    },
+    "Zepto": {
+      "sheet_name": "SOH",
+      "columns": {
+        "Channel_SKU": "SKU ID",
+        "SKU_Name": "SKU Name",
+        "Quantity": "Total Quantity",
+        "Inventory Location": "Store Name"
+      }
+    }
+  },
+  "Ecomm_Sales":{
         'test':{
             'sheet_name': 'sample', 
             'columns': {
@@ -399,6 +398,8 @@ def extract_data(folder_path, output_path):
         return None
 
     all_inventory_data = []
+    all_warnings=[]
+    all_errors=[]
     excel_files = [f for f in os.listdir(folder_path) if f.endswith(('.xlsx', '.xls','.csv'))]
     #file_extension =
 
@@ -415,9 +416,10 @@ def extract_data(folder_path, output_path):
             
             if mapping is None:
                 print(f"No mapping found for {file_name}. Skipping.")
+                all_errors.append(f"No mapping found for {file_name}. Skipping.")
                 continue
 
-            print(f"Processing file: {file_name} with mapping: {mapping}")
+            #print(f"Processing file: {file_name}")
 
             try:
                 if file_extension == ".xlsx":
@@ -429,15 +431,17 @@ def extract_data(folder_path, output_path):
                     #soh_data = clean_dataframe(soh_data)
                     #process_dataframe(df, "Sheet1", results, classifier)
                 else:
+                    all_errors.append("Unsupported file format. Only .xlsx and .csv are supported.")
                     raise ValueError("Unsupported file format. Only .xlsx and .csv are supported.")
-
+                    
                 #soh_data = (pd.read_excel(file_path, sheet_name=mapping['sheet_name']))
             except Exception as e:
                 print(f"Error loading sheet {mapping['sheet_name']} from {file_name}: {e}")
+                all_errors.append(f"Error loading sheet {mapping['sheet_name']} from {file_name}: {e}")
                 continue
             
 
-            print(f"Loaded data from {file_name}: {soh_data.shape} rows, columns.")
+            #print(f"Loaded data from {file_name}: {soh_data.shape} rows, columns.")
 
             extract_columns = {}
             for output_col, source_cols in mapping['columns'].items():
@@ -449,8 +453,9 @@ def extract_data(folder_path, output_path):
                     extract_columns[output_col] = matched_cols
                 else:
                     print(f"Warning: Missing column(s) for '{output_col}' in {file_name}: {source_cols}")
+                    all_warnings.append(f"Warning: Missing column(s) for '{output_col}' in {file_name}: {source_cols}")
 
-            print(f"Extract columns mapping: {extract_columns}")
+            #print(f"Extract columns mapping: {extract_columns}")
 
             inventory_data = soh_data.copy()
 
@@ -463,7 +468,7 @@ def extract_data(folder_path, output_path):
             inventory_data = inventory_data[list(extract_columns.keys())]
             inventory_data['Channel'] = channel
 
-            print(f"Mapped inventory data for {file_name}: {inventory_data.shape} rows.")
+            #print(f"Mapped inventory data for {file_name}: {inventory_data.shape} rows.")
             
             inventory_data = pd.merge(
                 inventory_data,
@@ -486,6 +491,7 @@ def extract_data(folder_path, output_path):
             print(f"Finished processing {file_name}.")
         except Exception as e:
             print(f"Error processing {file_name}: {e}")
+            all_errors.append(f"Error processing {file_name}: {e}")
 
     if all_inventory_data:
         final_inventory_data = pd.concat(all_inventory_data, ignore_index=True)
@@ -504,11 +510,16 @@ def extract_data(folder_path, output_path):
         unbundled_rows = bundle_data.apply(lambda row: split_row(row, bundle_mapping), axis=1)
         inventory_data_unbundled = pd.DataFrame([item for sublist in unbundled_rows for item in sublist])
         final_inventory_data = pd.concat([non_bundle_data, inventory_data_unbundled], ignore_index=True)
-        print(f"Unbundled data for {file_name}: {inventory_data_unbundled.shape} rows.")
+        print(f"Unbundled data for : {inventory_data_unbundled.shape} rows.")
         output_filename = f'unbundled_Inventory_{timestamp}.csv'
         final_output_path = os.path.join(output_path, output_filename)
         final_inventory_data.to_csv(final_output_path, index=False)
+        print(all_warnings)
+        print("-----  -----")
+        print("-----  -----")
+        print(all_errors)
         return final_inventory_data
+    
     else:
         print("No files were successfully processed.")
         return None
