@@ -231,7 +231,7 @@ if uploaded_file:
                     st.success("Prices fetched successfully!")
                 
                 # Display results
-                input_file['Price INR'] = pd.to_numeric(input_file['Price INR'], errors='coerce').fillna(0)
+                #input_file['Price INR'] = pd.to_numeric(input_file['Price INR'], errors='coerce').fillna(0)
                 #input_file_1 = input_file[input_file['Price INR']>0]
                 input_file_1=input_file
                 st.write("Results:", input_file_1)
