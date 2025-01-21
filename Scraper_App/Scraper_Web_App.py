@@ -10,6 +10,7 @@ import io
 import time
 import json
 import lxml
+import html.parser
 
 # Define price-fetching functions
 def fetch_nykaa_price(url):
@@ -118,7 +119,7 @@ def fetch_myntra_price(url):
                 price_data = json_data.get("pdpData", {}).get("price", {})
                 return price_data.get("discounted", "NA")
             else:
-                return e
+                return "NA"
         except Exception as e:
             print(f"Error fetching Myntra price: {e}")
             return e
