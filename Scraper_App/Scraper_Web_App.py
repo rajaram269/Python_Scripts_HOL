@@ -31,7 +31,7 @@ def fetch_nykaa_price(url):
         return price
     except Exception as e:
         print(f"Error fetching Nykaa price: {e}")
-        return "NA"
+        return e
 
 def fetch_amazon_price(url):
     HEADERS = {
@@ -63,7 +63,7 @@ def fetch_amazon_price(url):
         return price
     except Exception as e:
         print(f"Error fetching Amazon price: {e}")
-        return "NA"
+        return e
 
 def fetch_flipkart_price(url):
     HEADERS = {
@@ -93,7 +93,7 @@ def fetch_flipkart_price(url):
 
     except requests.exceptions.RequestException as e:
         print(f"Request error for URL {url}: {e}")
-        return "NA"
+        return e
 
 def fetch_myntra_price(url):
     HEADERS = {
@@ -117,13 +117,13 @@ def fetch_myntra_price(url):
                 price_data = json_data.get("pdpData", {}).get("price", {})
                 return price_data.get("discounted", "NA")
             else:
-                return "NA"
+                return e
         except Exception as e:
             print(f"Error fetching Myntra price: {e}")
-            return "NA"
+            return e
     except Exception as e:
         print(f"Error fetching Myntra price: {e}")
-        return "NA"
+        return e
 
 def fetch_zepto_price(url):
     HEADERS = {
@@ -134,17 +134,17 @@ def fetch_zepto_price(url):
         response = requests.get(url, headers=HEADERS)
         if response.status_code != 200:
             print(f"Failed to fetch URL: {url} (Status Code: {response.status_code})")
-            return "NA"
+            return e
 
         soup = BeautifulSoup(response.content, 'html.parser')
         try:
             price_element = soup.find("span", itemprop="price")
             return price_element['content'] if price_element else "NA"
         except AttributeError:
-            return "NA"
+            return e
     except Exception as e:
         print(f"Error fetching Zepto price: {e}")
-        return "NA"
+        return e
 
 def fetch_faceshop_price(url):
     HEADERS = {
@@ -155,7 +155,7 @@ def fetch_faceshop_price(url):
         response = requests.get(url, headers=HEADERS)
         if response.status_code != 200:
             print(f"Failed to fetch URL: {url} (Status Code: {response.status_code})")
-            return "NA"
+            return e
 
         soup = BeautifulSoup(response.content, 'html.parser')
         try:
@@ -166,7 +166,7 @@ def fetch_faceshop_price(url):
         return price
     except Exception as e:
         print(f"Error fetching Faceshop price: {e}")
-        return "NA"
+        return e
 
 def identify_sales_channel(url):
     if not isinstance(url, str):
@@ -186,6 +186,7 @@ def identify_sales_channel(url):
     return 'NA'
 
 def fetch_price(channel, url):
+    log=[]
     if channel == 'Amazon':
         return fetch_amazon_price(url)
     elif channel == 'Nykaa':
@@ -231,7 +232,8 @@ if uploaded_file:
                 
                 # Display results
                 input_file['Price INR'] = pd.to_numeric(input_file['Price INR'], errors='coerce').fillna(0)
-                input_file_1 = input_file[input_file['Price INR']>0]
+                #input_file_1 = input_file[input_file['Price INR']>0]
+                input_file_1=input_file
                 st.write("Results:", input_file_1)
 
                 # Download button
