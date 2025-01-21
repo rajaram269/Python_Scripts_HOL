@@ -9,6 +9,7 @@ from fake_useragent import UserAgent
 import io
 import time
 import json
+import lxml
 
 # Define price-fetching functions
 def fetch_nykaa_price(url):
