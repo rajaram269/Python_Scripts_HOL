@@ -5,3 +5,4 @@ requests
 beautifulsoup4
 fake-useragent
 lxml
+html.parser
