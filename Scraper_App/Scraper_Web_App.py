@@ -94,7 +94,7 @@ def fetch_myntra_price(url):
         response = requests.get(url, headers=HEADERS)
         if response.status_code != 200:
             print(f"Failed to fetch URL: {url} (Status Code: {response.status_code})")
-            return "NA"
+            return "No200"
 
         soup = BeautifulSoup(response.content, 'html.parser')
         try:
@@ -105,9 +105,9 @@ def fetch_myntra_price(url):
                 extracted_json = json_text[json_start:]
                 json_data = json.loads(extracted_json)
                 price_data = json_data.get("pdpData", {}).get("price", {})
-                return price_data.get("discounted", "NA")
+                return price_data.get("discounted", "NoKey")
             else:
-                return "NA"
+                return "NoScript"
         except Exception as e:
             print(f"Error fetching Myntra price: {e}")
             return e
@@ -231,8 +231,18 @@ if uploaded_file:
                 )
 
                 # Visualization
+                input_data['Timestamp'] = pd.to_datetime(input_data['Timestamp'])
+                st.markdown("## Filters")
+                sku_filter = st.selectbox("Select Product (SKU)", options=input_data['SKU CODE'].unique())
+                date_filter = st.date_input("Select Date Range", 
+                                    value=(input_data['Timestamp'].min(), input_data['Timestamp'].max()))
+                filtered_data = input_data[
+                    (input_data['SKU CODE'] == sku_filter) & 
+                    (input_data['Timestamp'] >= date_filter[0]) & 
+                    (input_data['Timestamp'] <= date_filter[1])
+                    ]
                 st.markdown("### SKU-wise Price Comparison Across Platforms")
-                filtered_data = input_data[input_data['Price INR'] != "NA"]
+                filtered_data = filtered_data[input_data['Price INR'] != "NA"]
                 if not filtered_data.empty:
                     chart = alt.Chart(filtered_data).mark_bar().encode(
                         x='SKU CODE:O',
