@@ -96,7 +96,7 @@ def fetch_myntra_price(url):
             print(f"Failed to fetch URL: {url} (Status Code: {response.status_code})")
             return "No200"
 
-        print(response.text)
+        #print(response.text)
         soup = BeautifulSoup(response.content, 'html.parser')
         try:
             script = soup.find("script", string=lambda t: t and "pdpData" in t)
@@ -108,7 +108,7 @@ def fetch_myntra_price(url):
                 price_data = json_data.get("pdpData", {}).get("price", {})
                 return price_data.get("discounted", "NoKey")
             else:
-                return "NoScript"
+                return response.content
         except Exception as e:
             print(f"Error fetching Myntra price: {e}")
             return e
