@@ -40,7 +40,7 @@ def load_sku_mapping(sku_map_path):
         
         combined_sku_mapping = pd.concat(all_sheets_data, ignore_index=True)
         print(f"Combined SKU mapping loaded successfully. Total rows: {len(combined_sku_mapping)}")
-        combined_sku_mapping.to_csv('combined_sku_map.csv', 
+        combined_sku_mapping.to_csv('C:/Extract/combined_sku_map.csv', 
            index=False,           # Don't write row index
            sep=',',               # Use comma as separator (default)
            encoding='utf-8',      # Specify encoding

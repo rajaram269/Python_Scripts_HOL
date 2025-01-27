@@ -86,7 +86,7 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
         # STEP 1: Clean and Validate Data
         # ======================================================================
         # Drop columns not in the database schema
-        df = df.drop(columns=['peak_day', 'id'], errors='ignore')
+        #df = df.drop(columns=['peak_day', 'id'], errors='ignore')
 
         # Define explicit column order (MUST match database schema EXACTLY)
         column_order = [
@@ -95,11 +95,17 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
             'sale_frequency_in_weeks', 'current_stock', 'weeks_coverage', 'sales_velocity',
             'avg_sales_90day', 'avg_sales_30day', 'revenue_rank', 'sku_segment',
             'performance_bucket', 'safety_stock', 'refill_level', 'mdq', 'weeks_until_stockout',
-            'potential_revenue_loss', 'brand_line', 'sku_name', 'MRP', 'store_name', 'channel'
+            'potential_revenue_loss', 'peak_day', 'brand_line', 'sku_name', 'MRP', 'store_name', 'channel'
         ]
 
         # Reorder DataFrame columns
         df = df[column_order]
+        df['weeks_until_stockout'] = pd.to_numeric(df['weeks_until_stockout'], errors='coerce')
+        df['mdq'] = pd.to_numeric(df['mdq'], errors='coerce')
+
+        # Replace inf/-inf with NaN first, then fill with 0.0
+        df['weeks_until_stockout'] = df['weeks_until_stockout'].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        df['mdq'] = df['mdq'].replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
         # Convert columns to match the database schema
         df['store_id'] = df['store_id'].astype(str).str.strip()
@@ -124,15 +130,16 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
         df['safety_stock'] = pd.to_numeric(df['safety_stock'], errors='coerce').fillna(0.0).round(2)
         df['refill_level'] = pd.to_numeric(df['refill_level'], errors='coerce').fillna(0.0).round(2)
         df['mdq'] = df['mdq'].astype(float).round(2)  # Convert to float
-        df['weeks_until_stockout'] = df['weeks_until_stockout'].astype(str).str.strip()
+        df['weeks_until_stockout'] = df['weeks_until_stockout'].astype(str).str.strip().str[:55].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
         df['potential_revenue_loss'] = df['potential_revenue_loss'].astype(float).round(2)
-        df['brand_line'] = df['brand_line'].astype(str).str.strip()
-        df['sku_name'] = df['sku_name'].astype(str).str.strip()
+        df['peak_day']=df['peak_day'].astype(str).str.strip().str[:55].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
+        df['brand_line'] = df['brand_line'].astype(str).str.strip().str[:55].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
+        df['sku_name'] = df['sku_name'].astype(str).str.strip().str[:55].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
         df['MRP'] = df['MRP'].astype(str).str.strip()  # Ensure this matches the database schema
-        df['store_name'] = df['store_name'].astype(str).str.strip()
-        df['channel'] = df['channel'].astype(str).str.strip()
+        df['store_name'] = df['store_name'].astype(str).str.strip().str[:254].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
+        df['channel'] = df['channel'].astype(str).str.strip().str[:55].str.encode('ascii', 'ignore').str.decode('ascii').fillna('')
 
-        df = df.drop(columns=['mdq'], errors='ignore')
+        #df = df.drop(columns=['mdq'], errors='ignore')
 
         # ======================================================================
         # STEP 2: Database Connection
@@ -152,6 +159,7 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
             try:
                 # Delete existing data
                 cursor.execute("DELETE FROM retail_ars_1 WHERE channel = ?", (channel,))
+                print('data exists, delete is success!!')
 
                 # Prepare insert query
                 #insert_query = """
@@ -167,15 +175,15 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
                 df = df[['store_id','sku_id','total_sales','total_sales_value', 'total_sales_days', 'weeks_of_data', 'total_weeks', 'sales_std', 'avg_weekly_sales', 'avg_weekly_revenue',
                     'sale_frequency_in_weeks', 'current_stock', 'weeks_coverage', 'sales_velocity',
                     'avg_sales_90day', 'avg_sales_30day', 'revenue_rank', 'sku_segment', 'performance_bucket', 
-                    'safety_stock', 'refill_level', 'potential_revenue_loss', 'MRP']]
+                    'safety_stock', 'refill_level', 'mdq', 'weeks_until_stockout', 'potential_revenue_loss', 'peak_day', 'brand_line', 'sku_name', 'MRP','store_name', 'channel']]
                 insert_query = """
                 INSERT INTO retail_ars_1 (
                     store_id, sku_id, total_sales, total_sales_value, total_sales_days,
                     weeks_of_data, total_weeks, sales_std, avg_weekly_sales, avg_weekly_revenue,
                     sale_frequency_in_weeks, current_stock, weeks_coverage, sales_velocity, 
                     avg_sales_90day, avg_sales_30day, revenue_rank, sku_segment, performance_bucket, 
-                    safety_stock, refill_level, potential_revenue_loss,  MRP
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    safety_stock, refill_level, mdq, weeks_until_stockout, potential_revenue_loss, peak_day, brand_line, sku_name, MRP, store_name, Channel
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
 
 
@@ -206,13 +214,14 @@ def post_metric_to_db(df: pd.DataFrame, channel: str) -> bool:
                     (pyodbc.SQL_FLOAT,),        # safety_stock
                     (pyodbc.SQL_FLOAT,),        # refill_level
                     (pyodbc.SQL_FLOAT,),        # mdq
-                    (pyodbc.SQL_VARCHAR, 255),        # weeks_until_stockout
+                    (pyodbc.SQL_WVARCHAR, 255),        # weeks_until_stockout
                     (pyodbc.SQL_FLOAT,),      # potential_revenue_loss
-                    (pyodbc.SQL_VARCHAR, 255),  # brand_line
-                    (pyodbc.SQL_VARCHAR, 255),  # sku_name
+                    (pyodbc.SQL_WVARCHAR, 255),        # peak_day
+                    (pyodbc.SQL_WVARCHAR, 255),  # brand_line
+                    (pyodbc.SQL_WVARCHAR, 255),  # sku_name
                     (pyodbc.SQL_VARCHAR, 255),      # MRP
-                    (pyodbc.SQL_VARCHAR, 255),  # store_name
-                    (pyodbc.SQL_VARCHAR, 255)    # channel
+                    (pyodbc.SQL_WVARCHAR, 255),  # store_name
+                    (pyodbc.SQL_WVARCHAR, 255)    # channel
                 ])
 
                 # Batch insert
@@ -541,6 +550,7 @@ def analyze_store_sku_performance(sales_data, stock_data, plano_data):
         store_metrics_df = pd.DataFrame(store_sku_metrics)
         store_metrics_df.to_csv('E:/Nykaa_Analysis/store_metric.csv',index=False)
         channel_name = store_sku_metrics['channel'].iloc[0]
+        #channel_name = "Nykaa1"
         post_metric_to_db(store_sku_metrics,channel_name)
         excel_output = 'E:/Nykaa_Analysis/retail_ars.xlsx'
         # Write dataframes to Excel file with separate sheets
